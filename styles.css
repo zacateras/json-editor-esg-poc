@@ -78,6 +78,44 @@ textarea {
   font-size: 0.9rem;
 }
 
+.token-guide {
+  border: 1px solid rgba(40, 53, 147, 0.2);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  background: rgba(40, 53, 147, 0.05);
+}
+
+.token-guide summary {
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+}
+
+.token-guide[open] summary {
+  margin-bottom: 0.75rem;
+}
+
+.token-guide p {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.token-guide ul {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.token-guide code {
+  font-family: "Fira Code", "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  background: rgba(13, 17, 23, 0.08);
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+}
+
 .schema-actions {
   display: flex;
   flex-wrap: wrap;
@@ -203,5 +241,14 @@ button:disabled {
 
   .hint {
     color: #9ba5d0;
+  }
+
+  .token-guide {
+    border-color: rgba(148, 163, 184, 0.4);
+    background: rgba(13, 17, 23, 0.5);
+  }
+
+  .token-guide code {
+    background: rgba(148, 163, 184, 0.2);
   }
 }

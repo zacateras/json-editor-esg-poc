@@ -26,6 +26,117 @@ document.addEventListener('DOMContentLoaded', () => {
   JSONEditor.defaults.options.iconlib = 'spectre';
   JSONEditor.defaults.options.ajax = true;
 
+  const dataTokens = {
+    countries: [],
+    countryCodes: [],
+    countryTitles: []
+  };
+
+  function cloneValue(value) {
+    if (value === undefined) {
+      return value;
+    }
+
+    if (typeof structuredClone === 'function') {
+      try {
+        return structuredClone(value);
+      } catch (error) {
+        console.warn('structuredClone failed for value, falling back to JSON clone', error);
+      }
+    }
+
+    try {
+      return JSON.parse(JSON.stringify(value));
+    } catch (error) {
+      console.error('Failed to clone value for data token substitution', error);
+      return value;
+    }
+  }
+
+  function registerCountryTokens(countries) {
+    const normalized = Array.isArray(countries)
+      ? countries
+          .map(option => {
+            if (!option || typeof option !== 'object') {
+              return null;
+            }
+
+            const name = typeof option.name === 'string' ? option.name.trim() : '';
+            const code = typeof option.code === 'string' ? option.code.trim() : '';
+            const region = typeof option.region === 'string' ? option.region : option.region ?? null;
+
+            if (!name || !code) {
+              return null;
+            }
+
+            return { name, code, region };
+          })
+          .filter(Boolean)
+      : [];
+
+    dataTokens.countries = normalized;
+    dataTokens.countryCodes = normalized.map(option => option.code);
+    dataTokens.countryTitles = normalized.map(option => `${option.name} (${option.code})`);
+  }
+
+  function isDataTokenObject(value) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      return false;
+    }
+
+    if (!Object.prototype.hasOwnProperty.call(value, '$data')) {
+      return false;
+    }
+
+    return Object.keys(value).every(key => key === '$data' || key === '$fallback');
+  }
+
+  function resolveDataTokens(value, missingTokens) {
+    if (Array.isArray(value)) {
+      return value.map(item => resolveDataTokens(item, missingTokens));
+    }
+
+    if (isDataTokenObject(value)) {
+      const tokenKey = typeof value.$data === 'string' ? value.$data.trim() : '';
+
+      if (!tokenKey) {
+        if (missingTokens) {
+          missingTokens.add('(invalid $data token)');
+        }
+
+        if (Object.prototype.hasOwnProperty.call(value, '$fallback')) {
+          return resolveDataTokens(value.$fallback, missingTokens);
+        }
+
+        return null;
+      }
+
+      if (!Object.prototype.hasOwnProperty.call(dataTokens, tokenKey)) {
+        if (missingTokens) {
+          missingTokens.add(tokenKey);
+        }
+
+        if (Object.prototype.hasOwnProperty.call(value, '$fallback')) {
+          return resolveDataTokens(value.$fallback, missingTokens);
+        }
+
+        return null;
+      }
+
+      return cloneValue(dataTokens[tokenKey]);
+    }
+
+    if (value && typeof value === 'object') {
+      const resolved = {};
+      for (const [key, nestedValue] of Object.entries(value)) {
+        resolved[key] = resolveDataTokens(nestedValue, missingTokens);
+      }
+      return resolved;
+    }
+
+    return value;
+  }
+
   function setSchemaError(message = '') {
     schemaError.textContent = message;
   }
@@ -42,6 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
     editorReady = false;
     editorHolder.innerHTML = '';
     outputElement.textContent = '{}';
+    editorInitialValue = {};
   }
 
   function updateOutput() {
@@ -76,11 +188,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     setSchemaError('');
+
+    const missingTokens = new Set();
+    const schemaWithData = resolveDataTokens(schema, missingTokens);
+
+    if (missingTokens.size > 0) {
+      setSchemaError(
+        `Schema references unknown data tokens: ${Array.from(missingTokens)
+          .sort()
+          .join(', ')}`
+      );
+      destroyEditor();
+      return;
+    }
+
     destroyEditor();
 
     try {
       editor = new JSONEditor(editorHolder, {
-        schema,
+        schema: schemaWithData,
         ajax: true,
         disable_collapse: true,
         disable_properties: true,
@@ -137,21 +263,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function createExampleSchema(countries) {
-    if (!Array.isArray(countries) || !countries.length) {
-      return {
-        title: 'Contact information',
-        description: 'Fallback example schema shown when remote data is unavailable.',
-        type: 'object',
-        properties: {
-          name: { type: 'string', title: 'Full name', minLength: 2 },
-          email: { type: 'string', format: 'email', title: 'Email address' }
-        }
-      };
-    }
+  function createExampleSchema(hasRemoteData) {
+    const fallbackCountry = { name: 'Sample Country', code: 'XX' };
+    const fallbackCountryTitle = `${fallbackCountry.name} (${fallbackCountry.code})`;
 
-    return {
-      title: 'Remote combobox example',
+    const schema = {
+      title: 'Token-driven combobox example',
+      description:
+        'Demonstrates how {"$data": "..."} tokens hydrate datasets fetched in app.js before the editor renders.',
       type: 'object',
       required: ['name', 'email', 'country'],
       properties: {
@@ -179,27 +298,46 @@ document.addEventListener('DOMContentLoaded', () => {
           type: 'string',
           format: 'select',
           title: 'Country',
-          enum: countries.map(option => option.code),
+          enum: {
+            $data: 'countryCodes',
+            $fallback: [fallbackCountry.code]
+          },
           options: {
-            enum_titles: countries.map(option => `${option.name} (${option.code})`),
+            enum_titles: {
+              $data: 'countryTitles',
+              $fallback: [fallbackCountryTitle]
+            },
             enumSource: [
               {
                 source: {
-                  url: GIST_URL,
-                  pointer: '/countries'
+                  $data: 'countries',
+                  $fallback: [fallbackCountry]
                 },
                 value: 'code',
                 title: '{{item.name}} ({{item.code}})'
               }
             ],
-            infoText: 'Options are loaded via AJAX from the GitHub gist.'
+            inputAttributes: {
+              placeholder: 'Select a country'
+            },
+            infoText: hasRemoteData
+              ? 'Options are hydrated from the prefetched countries dataset via data tokens.'
+              : 'Remote dataset unavailable. Fallback values keep the select usable until data loads.'
           }
         }
       }
     };
+
+    if (!hasRemoteData) {
+      schema.description += ' The fallback data ensures the select remains interactive when the remote request fails.';
+    }
+
+    return schema;
   }
 
   async function initialise() {
+    let postRenderMessage = '';
+
     try {
       const response = await fetch(GIST_URL);
       if (!response.ok) {
@@ -209,15 +347,27 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await response.json();
       const countries = Array.isArray(data?.countries) ? data.countries : [];
 
-      exampleSchemaString = JSON.stringify(createExampleSchema(countries), null, 2);
+      registerCountryTokens(countries);
+
+      const hasRemoteData = dataTokens.countries.length > 0;
+      exampleSchemaString = JSON.stringify(createExampleSchema(hasRemoteData), null, 2);
+
+      if (!hasRemoteData) {
+        postRenderMessage = 'Remote dataset returned no countries. Fallback values are being used for the select control.';
+      }
     } catch (error) {
       console.error(error);
-      exampleSchemaString = JSON.stringify(createExampleSchema([]), null, 2);
-      setSchemaError('Loaded fallback schema because remote options could not be retrieved.');
+      registerCountryTokens([]);
+      exampleSchemaString = JSON.stringify(createExampleSchema(false), null, 2);
+      postRenderMessage = 'Loaded fallback schema because remote options could not be retrieved.';
     }
 
     schemaInput.value = exampleSchemaString;
     renderEditorFromSchema();
+
+    if (postRenderMessage && !schemaError.textContent) {
+      setSchemaError(postRenderMessage);
+    }
   }
 
   renderButton.addEventListener('click', renderEditorFromSchema);

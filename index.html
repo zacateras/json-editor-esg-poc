@@ -21,7 +21,17 @@
         <p>Paste or edit a schema, then render the form. You can restore the built-in example at any time.</p>
       </div>
       <textarea id="schema-input" spellcheck="false" aria-describedby="schema-hint schema-error" placeholder="Paste JSON Schema here"></textarea>
-      <p id="schema-hint" class="hint">Tip: Schemas can reference remote data sources when AJAX is enabled.</p>
+      <p id="schema-hint" class="hint">Tip: Schemas can reference remote data sources when AJAX is enabled. Use the data tokens below to inject values that were fetched in advance.</p>
+      <details class="token-guide">
+        <summary>Available data tokens</summary>
+        <p>Embed these token objects wherever a schema needs runtime values supplied by the page.</p>
+        <ul>
+          <li><code>{ &quot;$data&quot;: &quot;countries&quot; }</code> &mdash; full array of country objects with <code>name</code>, <code>code</code>, and <code>region</code>.</li>
+          <li><code>{ &quot;$data&quot;: &quot;countryCodes&quot; }</code> &mdash; ISO codes extracted from the countries dataset.</li>
+          <li><code>{ &quot;$data&quot;: &quot;countryTitles&quot; }</code> &mdash; display labels such as <em>“France (FR)”</em>.</li>
+          <li><code>{ &quot;$data&quot;: &quot;countries&quot;, &quot;$fallback&quot;: [] }</code> &mdash; provide a fallback when a token is missing.</li>
+        </ul>
+      </details>
       <div class="schema-actions">
         <button id="render-schema">Render form</button>
         <button id="load-example" type="button" class="secondary">Load example schema</button>
