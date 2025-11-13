@@ -101,7 +101,7 @@ textarea {
   font-size: 0.9rem;
 }
 
-.token-guide ul {
+.token-guide .token-list {
   margin: 0;
   padding-left: 1.2rem;
   display: grid;
@@ -120,6 +120,37 @@ textarea {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+}
+
+.example-controls {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.example-controls label {
+  font-weight: 600;
+}
+
+.example-loader {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+select {
+  min-width: 220px;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(40, 53, 147, 0.3);
+  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.9);
+  color: inherit;
+}
+
+.example-description {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #37474f;
 }
 
 button {
@@ -215,6 +246,72 @@ button:disabled {
   word-break: break-word;
 }
 
+.documentation {
+  padding: 1.5rem;
+}
+
+.documentation-content {
+  max-width: 960px;
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+  padding: 2rem;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.documentation h2,
+.documentation h3 {
+  margin: 0;
+}
+
+.documentation ol {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.documentation p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.dictionary-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.dictionary-table th,
+.dictionary-table td {
+  border: 1px solid rgba(40, 53, 147, 0.2);
+  padding: 0.6rem 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.dictionary-table th {
+  background: rgba(40, 53, 147, 0.08);
+}
+
+.dictionary-table code {
+  display: inline-block;
+  margin-right: 0.25rem;
+}
+
+.code-snippet {
+  margin: 0;
+  padding: 1rem;
+  background: #0d1117;
+  color: #d1d5db;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-family: "Fira Code", "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.95rem;
+}
+
 @media (max-width: 960px) {
   .workspace {
     grid-template-columns: minmax(0, 1fr);
@@ -250,5 +347,33 @@ button:disabled {
 
   .token-guide code {
     background: rgba(148, 163, 184, 0.2);
+  }
+
+  select {
+    background: rgba(13, 17, 23, 0.7);
+    border-color: rgba(148, 163, 184, 0.4);
+  }
+
+  .example-description {
+    color: #a5b4fc;
+  }
+
+  .documentation-content {
+    background: #161b22;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.6);
+  }
+
+  .dictionary-table th,
+  .dictionary-table td {
+    border-color: rgba(148, 163, 184, 0.3);
+  }
+
+  .dictionary-table th {
+    background: rgba(148, 163, 184, 0.15);
+  }
+
+  .code-snippet {
+    background: rgba(13, 17, 23, 0.85);
+    color: #e6edf3;
   }
 }

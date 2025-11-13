@@ -11,30 +11,73 @@
 <body>
   <header>
     <h1>JSON Editor Proof of Concept</h1>
-    <p>Provide a JSON Schema on the left to see the generated form on the right. The editor is configured to allow AJAX lookups.</p>
+    <p>
+      Build interactive forms from JSON Schema. The demo ships with ESG-focused schema samples and embedded
+      financial dictionaries so you can explore token-driven enumerations without any external data calls.
+    </p>
   </header>
 
   <main class="workspace">
     <section class="schema-panel" aria-label="JSON schema input">
       <div class="panel-header">
         <h2>JSON Schema</h2>
-        <p>Paste or edit a schema, then render the form. You can restore the built-in example at any time.</p>
+        <p>Paste or edit a schema, then render the form. You can restore a curated example at any time.</p>
       </div>
-      <textarea id="schema-input" spellcheck="false" aria-describedby="schema-hint schema-error" placeholder="Paste JSON Schema here"></textarea>
-      <p id="schema-hint" class="hint">Tip: Schemas can reference remote data sources when AJAX is enabled. Use the data tokens below to inject values that were fetched in advance.</p>
+      <div class="example-controls">
+        <label for="example-select">Example library</label>
+        <div class="example-loader">
+          <select id="example-select" aria-describedby="example-description">
+            <option value="" disabled selected>Loading examples…</option>
+          </select>
+          <button id="load-example" type="button" class="secondary">Load selected example</button>
+        </div>
+        <p id="example-description" class="example-description"></p>
+      </div>
+      <textarea
+        id="schema-input"
+        spellcheck="false"
+        aria-describedby="schema-hint schema-error"
+        placeholder="Paste JSON Schema here or load an example from the library above."
+      ></textarea>
+      <p id="schema-hint" class="hint">
+        Tip: Schemas can reference the embedded financial dictionaries with
+        <code>{ "$data": "dict.…" }</code> tokens. Provide a <code>$fallback</code> array to keep controls usable when
+        a token is missing.
+      </p>
       <details class="token-guide">
         <summary>Available data tokens</summary>
-        <p>Embed these token objects wherever a schema needs runtime values supplied by the page.</p>
-        <ul>
-          <li><code>{ &quot;$data&quot;: &quot;countries&quot; }</code> &mdash; full array of country objects with <code>name</code>, <code>code</code>, and <code>region</code>.</li>
-          <li><code>{ &quot;$data&quot;: &quot;countryCodes&quot; }</code> &mdash; ISO codes extracted from the countries dataset.</li>
-          <li><code>{ &quot;$data&quot;: &quot;countryTitles&quot; }</code> &mdash; display labels such as <em>“France (FR)”</em>.</li>
-          <li><code>{ &quot;$data&quot;: &quot;countries&quot;, &quot;$fallback&quot;: [] }</code> &mdash; provide a fallback when a token is missing.</li>
+        <p>Embed these token objects wherever your schema needs runtime values supplied by the page.</p>
+        <ul class="token-list">
+          <li>
+            <code>{ "$data": "dict.names" }</code> &mdash; discover all available dictionary names for dynamic logic.
+          </li>
+          <li>
+            <code>{ "$data": "dict.country" }</code> &mdash; full country entries with <code>id</code>, <code>code</code>,
+            and <code>description</code>.
+          </li>
+          <li>
+            <code>{ "$data": "dict.country.codes" }</code> &mdash; ISO codes suitable for <code>enum</code> arrays.
+          </li>
+          <li>
+            <code>{ "$data": "dict.currency" }</code> &mdash; common currencies with preformatted option templates.
+          </li>
+          <li>
+            <code>{ "$data": "dict.esg_metric" }</code> &mdash; ESG metrics surfaced in the example schemas.
+          </li>
+          <li>
+            <code>{ "$data": "dict.asset_class.descriptions" }</code> &mdash; human-friendly display values.
+          </li>
+          <li>
+            <code>{ "$data": "dict.sustainability_rating.byCode" }</code> &mdash; lookup map keyed by rating code.
+          </li>
+          <li>
+            <code>{ "$data": "dict.currency.codes", "$fallback": ["USD", "EUR"] }</code> &mdash; combine tokens with
+            fallbacks to guarantee availability.
+          </li>
         </ul>
       </details>
       <div class="schema-actions">
         <button id="render-schema">Render form</button>
-        <button id="load-example" type="button" class="secondary">Load example schema</button>
       </div>
       <div id="schema-error" class="error" role="alert" aria-live="polite"></div>
     </section>
@@ -54,8 +97,96 @@
     </section>
   </main>
 
+  <section class="documentation" aria-labelledby="documentation-heading">
+    <div class="documentation-content">
+      <h2 id="documentation-heading">How to use this demo</h2>
+      <ol>
+        <li>Pick an ESG-focused example from the library to see a working schema.</li>
+        <li>Modify the JSON Schema in the left pane or paste your own design.</li>
+        <li>Click <strong>Render form</strong> to rebuild the editor with the latest schema.</li>
+        <li>Interact with the generated fields; the live JSON payload is shown on the right.</li>
+        <li>Use <strong>Reset form</strong> to return to the default values defined by the schema.</li>
+      </ol>
+
+      <h3>Embedded dictionaries</h3>
+      <p>
+        The page preloads financial and ESG dictionaries so schemas can stay concise. Reference them with the
+        <code>$data</code> helper and provide optional <code>$fallback</code> values to keep controls operable if a token is
+        removed.
+      </p>
+      <table class="dictionary-table">
+        <thead>
+          <tr>
+            <th scope="col">Dictionary</th>
+            <th scope="col">Description</th>
+            <th scope="col">Useful tokens</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row"><code>dict.country</code></th>
+            <td>Countries for issuer, project, or beneficiary locations.</td>
+            <td>
+              <code>{ "$data": "dict.country" }</code>,
+              <code>{ "$data": "dict.country.codes" }</code>
+            </td>
+          </tr>
+          <tr>
+            <th scope="row"><code>dict.currency</code></th>
+            <td>Major currencies for sustainable finance disclosures.</td>
+            <td>
+              <code>{ "$data": "dict.currency" }</code>,
+              <code>{ "$data": "dict.currency.descriptions" }</code>
+            </td>
+          </tr>
+          <tr>
+            <th scope="row"><code>dict.esg_metric</code></th>
+            <td>Key metrics covering climate, water, waste, and diversity.</td>
+            <td>
+              <code>{ "$data": "dict.esg_metric" }</code>,
+              <code>{ "$data": "dict.esg_metric.codes" }</code>
+            </td>
+          </tr>
+          <tr>
+            <th scope="row"><code>dict.asset_class</code></th>
+            <td>Asset classes used in allocation and product classification examples.</td>
+            <td>
+              <code>{ "$data": "dict.asset_class" }</code>,
+              <code>{ "$data": "dict.asset_class.descriptions" }</code>
+            </td>
+          </tr>
+          <tr>
+            <th scope="row"><code>dict.sustainability_rating</code></th>
+            <td>Risk ratings that power supplier and product screening.</td>
+            <td>
+              <code>{ "$data": "dict.sustainability_rating.codes" }</code>,
+              <code>{ "$data": "dict.sustainability_rating.byCode" }</code>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Token usage example</h3>
+      <pre class="code-snippet" aria-label="Sample schema snippet">
+{
+  "currency": {
+    "type": "string",
+    "title": "Reporting currency",
+    "enum": { "$data": "dict.currency.codes" },
+    "options": {
+      "enum_titles": { "$data": "dict.currency.descriptions" }
+    }
+  }
+}
+      </pre>
+    </div>
+  </section>
+
   <footer>
-    <p>Example schema pulls combobox data from <a href="https://gist.github.com/zacateras/611ee990ffcd531beb74836a533d0302" target="_blank" rel="noopener">this GitHub gist</a>.</p>
+    <p>
+      All sample schemas and lookup dictionaries are embedded locally in <code>app.js</code>. No network requests are
+      required to explore the editor.
+    </p>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@json-editor/json-editor@2.14.1/dist/jsoneditor.min.js"></script>
