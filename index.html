@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JSON Editor PoC</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@json-editor/json-editor@2.14.1/dist/jsoneditor.min.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>JSON Editor Proof of Concept</h1>
+    <p>This demo renders a JSON schema-driven form and loads combobox options from a remote source.</p>
+  </header>
+
+  <main>
+    <section class="editor-panel">
+      <div id="editor"></div>
+      <div class="actions">
+        <button id="submit">Submit</button>
+        <button id="reset">Reset</button>
+      </div>
+    </section>
+    <section class="output-panel">
+      <h2>Output</h2>
+      <pre id="output" aria-live="polite">{\n  "name": "",\n  "email": "",\n  "country": ""\n}</pre>
+    </section>
+  </main>
+
+  <footer>
+    <p>Combobox data is fetched from <a href="https://gist.github.com/zacateras/611ee990ffcd531beb74836a533d0302" target="_blank" rel="noopener">this GitHub gist</a>.</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@json-editor/json-editor@2.14.1/dist/jsoneditor.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
