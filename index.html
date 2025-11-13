@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>JSON Editor PoC — ESG</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link
     rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
@@ -21,7 +22,7 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <header class="py-5 text-white bg-gradient">
+  <header class="py-5 text-white bg-black">
     <div class="container">
       <h1 class="display-5 fw-semibold">Demonstrator JSON Editor dla danych ESG</h1>
       <p class="lead mb-0">
@@ -86,14 +87,17 @@
 
                 <div>
                   <label for="schema-input" class="form-label">Definicja JSON Schema</label>
-                  <textarea
-                    id="schema-input"
-                    class="form-control font-monospace"
-                    rows="16"
-                    spellcheck="false"
-                    aria-describedby="schema-hint schema-error"
-                    placeholder="Wklej schemat JSON lub skorzystaj z biblioteki przykładów powyżej."
-                  ></textarea>
+                  <div class="schema-editor">
+                    <pre id="schema-highlights" class="schema-highlights" aria-hidden="true"></pre>
+                    <textarea
+                      id="schema-input"
+                      class="form-control font-monospace"
+                      rows="16"
+                      spellcheck="false"
+                      aria-describedby="schema-hint schema-error"
+                      placeholder="Wklej schemat JSON lub skorzystaj z biblioteki przykładów powyżej."
+                    ></textarea>
+                  </div>
                   <div id="schema-hint" class="form-text mt-2">
                     Słowniki można odwoływać przy pomocy tokenów <code>{ "$data": "dict.…" }</code>. Dla wybranych pól dodaliśmy
                     przykładowe wartości zapasowe przez <code>$fallback</code>.
@@ -223,11 +227,31 @@
                 <h2 class="h6 mb-0">Wskazówki</h2>
               </div>
               <div class="card-body">
-                <ul class="list-unstyled small mb-0">
-                  <li class="mb-2">Stosuj walidację (<code>minItems</code>, <code>pattern</code>, <code>minimum</code>) do kontroli jakości danych.</li>
-                  <li class="mb-2">Łącz słowniki z regułami warunkowymi (<code>if</code>/<code>then</code>), aby zmieniać wymagania formularza.</li>
-                  <li class="mb-2">Dla wielokrotnych wyborów używaj tablic i formatu <code>table</code>, aby zapewnić czytelność.</li>
-                  <li>Dodawaj komentarze w polu <code>description</code>, aby użytkownicy znali kontekst informacji.</li>
+                <ul class="list-unstyled small mb-0 d-grid gap-2">
+                  <li>
+                    <strong>Walidacja zakresów:</strong> Stosuj <code>minimum</code>, <code>maximum</code>, <code>exclusiveMinimum</code> i
+                    <code>exclusiveMaximum</code>, aby wymusić realistyczne wartości liczbowe.
+                  </li>
+                  <li>
+                    <strong>Kontrola tekstu:</strong> Wykorzystaj <code>pattern</code> do walidacji identyfikatorów (np. ISIN) oraz
+                    <code>minLength</code>/<code>maxLength</code> do opisów.
+                  </li>
+                  <li>
+                    <strong>Warunki biznesowe:</strong> Zmieniając schemat poprzez <code>if</code>/<code>then</code>/<code>else</code>, możesz
+                    wymagać dodatkowych pól, gdy użytkownik wybierze określoną klasę aktywów lub ocenę ryzyka.
+                  </li>
+                  <li>
+                    <strong>Wielokrotne wybory:</strong> Użyj tablic z <code>uniqueItems</code>, aby zablokować duplikaty, a format
+                    <code>table</code> poprawi czytelność list danych.
+                  </li>
+                  <li>
+                    <strong>Opisuj słowniki:</strong> Dodaj krótkie <code>description</code> z informacją, kiedy stosować dane pole, oraz
+                    wykorzystuj <code>$fallback</code> wyłącznie tam, gdzie brak tokena utrudnia prezentację formularza.
+                  </li>
+                  <li>
+                    <strong>Integracja z API:</strong> Dzięki włączonemu <code>ajax</code> możesz łączyć schemat z usługami REST i
+                    aktualizować słowniki w trakcie pracy.
+                  </li>
                 </ul>
               </div>
             </div>

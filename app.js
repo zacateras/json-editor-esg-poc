@@ -817,6 +817,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const editorHolder = document.getElementById('editor-holder');
   const outputElement = document.getElementById('output');
   const schemaError = document.getElementById('schema-error');
+  const schemaHighlights = document.getElementById('schema-highlights');
 
   if (typeof JSONEditor === 'undefined') {
     schemaError.textContent = 'Nie udało się wczytać biblioteki JSON Editor. Odśwież stronę.';
@@ -845,6 +846,48 @@ document.addEventListener('DOMContentLoaded', () => {
   let editor = null;
   let editorInitialValue = {};
   let editorReady = false;
+  let collapseObserver = null;
+
+  function escapeForHTML(value) {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  function highlightDictionaryTokens(text) {
+    if (!text) {
+      return '';
+    }
+
+    const escaped = escapeForHTML(text);
+    return escaped.replace(/dict\.[A-Za-z0-9_.-]+/g, match => `<mark>${match}</mark>`);
+  }
+
+  function updateSchemaHighlights() {
+    if (!schemaHighlights || !schemaInput) {
+      return;
+    }
+
+    const content = schemaInput.value;
+    schemaHighlights.innerHTML = `${highlightDictionaryTokens(content)}\n`;
+    schemaHighlights.scrollTop = schemaInput.scrollTop;
+    schemaHighlights.scrollLeft = schemaInput.scrollLeft;
+  }
+
+  function syncSchemaScroll() {
+    if (!schemaHighlights || !schemaInput) {
+      return;
+    }
+
+    schemaHighlights.scrollTop = schemaInput.scrollTop;
+    schemaHighlights.scrollLeft = schemaInput.scrollLeft;
+  }
+
+  if (schemaInput) {
+    schemaInput.addEventListener('input', updateSchemaHighlights);
+    schemaInput.addEventListener('scroll', syncSchemaScroll);
+  }
 
   function cloneValue(value) {
     if (value === undefined) {
@@ -973,6 +1016,11 @@ document.addEventListener('DOMContentLoaded', () => {
     editorHolder.innerHTML = '';
     outputElement.textContent = '{}';
     editorInitialValue = {};
+
+    if (collapseObserver) {
+      collapseObserver.disconnect();
+      collapseObserver = null;
+    }
   }
 
   function updateOutput() {
@@ -1035,6 +1083,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     editorReady = false;
 
+    setupCollapseObserver();
+    updateCollapseButtons();
+
     editor.on('ready', () => {
       editorReady = true;
       try {
@@ -1044,6 +1095,7 @@ document.addEventListener('DOMContentLoaded', () => {
         editorInitialValue = {};
       }
       updateOutput();
+      updateCollapseButtons();
     });
 
     editor.on('change', () => {
@@ -1051,6 +1103,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       updateOutput();
+      updateCollapseButtons();
     });
   }
 
@@ -1113,6 +1166,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const formattedSchema = JSON.stringify(example.schema, null, 2);
     schemaInput.value = formattedSchema;
+    updateSchemaHighlights();
     if (exampleSelect) {
       exampleSelect.value = example.id;
       const placeholder = exampleSelect.querySelector('option[value=""]');
@@ -1155,4 +1209,68 @@ document.addEventListener('DOMContentLoaded', () => {
   const initialExample = SCHEMA_EXAMPLES[0];
   loadExampleIntoEditor(initialExample);
   renderEditorFromSchema();
+
+  updateSchemaHighlights();
+
+  function setupCollapseObserver() {
+    if (!editorHolder || collapseObserver) {
+      return;
+    }
+
+    collapseObserver = new MutationObserver(() => {
+      updateCollapseButtons();
+    });
+
+    collapseObserver.observe(editorHolder, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  function updateCollapseButtons() {
+    if (!editorHolder) {
+      return;
+    }
+
+    const buttons = editorHolder.querySelectorAll(
+      'button.json-editor-btn-collapse, button[data-action="collapse"]'
+    );
+    buttons.forEach(button => {
+      if (!button.dataset.iconified) {
+        button.textContent = '';
+        button.dataset.iconified = 'true';
+        button.classList.add('btn-icon');
+        button.setAttribute('aria-label', 'Przełącz zwinięcie sekcji');
+      }
+
+      const setState = () => {
+        const aria = button.getAttribute('aria-expanded');
+        const collapsedByAria = aria === 'false';
+        const expandedByAria = aria === 'true';
+        const collapsedByClass = button.classList.contains('collapsed');
+        const collapsed = collapsedByAria || collapsedByClass;
+
+        if (expandedByAria) {
+          button.dataset.collapsed = 'false';
+          return;
+        }
+
+        if (collapsed) {
+          button.dataset.collapsed = 'true';
+          return;
+        }
+
+        button.dataset.collapsed = 'false';
+      };
+
+      setState();
+
+      if (!button.dataset.collapseListenerAttached) {
+        button.addEventListener('click', () => {
+          requestAnimationFrame(setState);
+        });
+        button.dataset.collapseListenerAttached = 'true';
+      }
+    });
+  }
 });
