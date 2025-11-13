@@ -1,195 +1,257 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pl">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>JSON Editor PoC</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@json-editor/json-editor@2.14.1/dist/jsoneditor.min.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@json-editor/json-editor@2.14.1/dist/themes/spectre.css" />
+  <title>JSON Editor PoC — ESG</title>
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+    crossorigin="anonymous"
+  />
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/@json-editor/json-editor@2.14.1/dist/jsoneditor.min.css"
+  />
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/@json-editor/json-editor@2.14.1/dist/themes/bootstrap5.css"
+  />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <header>
-    <h1>JSON Editor Proof of Concept</h1>
-    <p>
-      Build interactive forms from JSON Schema. The demo ships with ESG-focused schema samples and embedded
-      financial dictionaries so you can explore token-driven enumerations without any external data calls.
-    </p>
+  <header class="py-5 text-white bg-gradient">
+    <div class="container">
+      <h1 class="display-5 fw-semibold">Demonstrator JSON Editor dla danych ESG</h1>
+      <p class="lead mb-0">
+        Wykorzystaj wbudowane słowniki finansowe, aby dynamicznie generować formularze z JSON Schema i prezentować
+        scenariusze raportowania ESG bez połączenia z siecią.
+      </p>
+    </div>
   </header>
 
-  <main class="workspace">
-    <section class="schema-panel" aria-label="JSON schema input">
-      <div class="panel-header">
-        <h2>JSON Schema</h2>
-        <p>Paste or edit a schema, then render the form. You can restore a curated example at any time.</p>
-      </div>
-      <div class="example-controls">
-        <label for="example-select">Example library</label>
-        <div class="example-loader">
-          <select id="example-select" aria-describedby="example-description">
-            <option value="" disabled selected>Loading examples…</option>
-          </select>
-          <button id="load-example" type="button" class="secondary">Load selected example</button>
+  <main class="container-fluid py-4">
+    <ul class="nav nav-tabs" id="main-tabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button
+          class="nav-link active"
+          id="editor-tab"
+          data-bs-toggle="tab"
+          data-bs-target="#editor-pane"
+          type="button"
+          role="tab"
+          aria-controls="editor-pane"
+          aria-selected="true"
+        >
+          Edytor formularza
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button
+          class="nav-link"
+          id="guide-tab"
+          data-bs-toggle="tab"
+          data-bs-target="#guide-pane"
+          type="button"
+          role="tab"
+          aria-controls="guide-pane"
+          aria-selected="false"
+        >
+          Jak używać?
+        </button>
+      </li>
+    </ul>
+
+    <div class="tab-content pt-4">
+      <div class="tab-pane fade show active" id="editor-pane" role="tabpanel" aria-labelledby="editor-tab">
+        <div class="row g-4">
+          <section class="col-12 col-xl-5" aria-label="JSON Schema">
+            <div class="card shadow-sm h-100">
+              <div class="card-header bg-body-tertiary border-bottom-0">
+                <h2 class="h5 mb-1">JSON Schema</h2>
+                <p class="mb-0 text-muted">Wklej schemat lub wybierz gotowy przykład i wygeneruj formularz po prawej stronie.</p>
+              </div>
+              <div class="card-body d-flex flex-column gap-3">
+                <div>
+                  <label for="example-select" class="form-label">Biblioteka przykładów</label>
+                  <div class="input-group">
+                    <select id="example-select" class="form-select" aria-describedby="example-description">
+                      <option value="" disabled selected>Wczytywanie przykładów…</option>
+                    </select>
+                    <button id="load-example" type="button" class="btn btn-outline-secondary">Załaduj</button>
+                  </div>
+                  <div id="example-description" class="form-text mt-2"></div>
+                </div>
+
+                <div>
+                  <label for="schema-input" class="form-label">Definicja JSON Schema</label>
+                  <textarea
+                    id="schema-input"
+                    class="form-control font-monospace"
+                    rows="16"
+                    spellcheck="false"
+                    aria-describedby="schema-hint schema-error"
+                    placeholder="Wklej schemat JSON lub skorzystaj z biblioteki przykładów powyżej."
+                  ></textarea>
+                  <div id="schema-hint" class="form-text mt-2">
+                    Słowniki można odwoływać przy pomocy tokenów <code>{ "$data": "dict.…" }</code>. Dla wybranych pól dodaliśmy
+                    przykładowe wartości zapasowe przez <code>$fallback</code>.
+                  </div>
+                </div>
+
+                <details class="token-guide">
+                  <summary>Dostępne tokeny danych</summary>
+                  <p class="mb-2">Tokeny udostępniają wartości słowników podczas renderowania schematu:</p>
+                  <ul class="list-unstyled small mb-0 token-list">
+                    <li><code>{ "$data": "dict.names" }</code> — lista nazw wszystkich słowników.</li>
+                    <li><code>{ "$data": "dict.country" }</code> — wpisy państw z polami <code>id</code>, <code>code</code> i <code>description</code>.</li>
+                    <li><code>{ "$data": "dict.country.codes" }</code> — kody ISO do użycia w <code>enum</code>.</li>
+                    <li><code>{ "$data": "dict.currency.descriptions" }</code> — opisy walut w formacie „kod — opis”.</li>
+                    <li><code>{ "$data": "dict.esg_metric" }</code> — komplet metryk ESG.</li>
+                    <li><code>{ "$data": "dict.asset_class.descriptions" }</code> — nazwy klas aktywów.</li>
+                    <li><code>{ "$data": "dict.sustainability_rating.codes" }</code> — dostępne oceny ryzyka ESG.</li>
+                  </ul>
+                </details>
+
+                <div class="d-flex gap-2">
+                  <button id="render-schema" type="button" class="btn btn-primary">Generuj formularz</button>
+                  <button id="reset-form" type="button" class="btn btn-outline-secondary">Resetuj formularz</button>
+                </div>
+
+                <div id="schema-error" class="alert alert-danger mb-0 d-none" role="alert" aria-live="polite"></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="col-12 col-xl-7" aria-label="Wygenerowany formularz">
+            <div class="card shadow-sm h-100">
+              <div class="card-header bg-body-tertiary border-bottom-0">
+                <h2 class="h5 mb-0">Wynik JSON Editor</h2>
+              </div>
+              <div class="card-body d-flex flex-column gap-3">
+                <div id="editor-holder" class="editor-holder" aria-live="polite"></div>
+                <div class="card bg-body-secondary">
+                  <div class="card-header py-2">
+                    <h3 class="h6 mb-0">Aktualne dane</h3>
+                  </div>
+                  <div class="card-body p-3">
+                    <pre id="output" class="mb-0">{}</pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
-        <p id="example-description" class="example-description"></p>
       </div>
-      <textarea
-        id="schema-input"
-        spellcheck="false"
-        aria-describedby="schema-hint schema-error"
-        placeholder="Paste JSON Schema here or load an example from the library above."
-      ></textarea>
-      <p id="schema-hint" class="hint">
-        Tip: Schemas can reference the embedded financial dictionaries with
-        <code>{ "$data": "dict.…" }</code> tokens. Provide a <code>$fallback</code> array to keep controls usable when
-        a token is missing.
-      </p>
-      <details class="token-guide">
-        <summary>Available data tokens</summary>
-        <p>Embed these token objects wherever your schema needs runtime values supplied by the page.</p>
-        <ul class="token-list">
-          <li>
-            <code>{ "$data": "dict.names" }</code> &mdash; discover all available dictionary names for dynamic logic.
-          </li>
-          <li>
-            <code>{ "$data": "dict.country" }</code> &mdash; full country entries with <code>id</code>, <code>code</code>,
-            and <code>description</code>.
-          </li>
-          <li>
-            <code>{ "$data": "dict.country.codes" }</code> &mdash; ISO codes suitable for <code>enum</code> arrays.
-          </li>
-          <li>
-            <code>{ "$data": "dict.currency" }</code> &mdash; common currencies with preformatted option templates.
-          </li>
-          <li>
-            <code>{ "$data": "dict.esg_metric" }</code> &mdash; ESG metrics surfaced in the example schemas.
-          </li>
-          <li>
-            <code>{ "$data": "dict.asset_class.descriptions" }</code> &mdash; human-friendly display values.
-          </li>
-          <li>
-            <code>{ "$data": "dict.sustainability_rating.byCode" }</code> &mdash; lookup map keyed by rating code.
-          </li>
-          <li>
-            <code>{ "$data": "dict.currency.codes", "$fallback": ["USD", "EUR"] }</code> &mdash; combine tokens with
-            fallbacks to guarantee availability.
-          </li>
-        </ul>
-      </details>
-      <div class="schema-actions">
-        <button id="render-schema">Render form</button>
-      </div>
-      <div id="schema-error" class="error" role="alert" aria-live="polite"></div>
-    </section>
 
-    <section class="editor-panel" aria-label="Generated form">
-      <div class="panel-header">
-        <h2>Generated form</h2>
-        <button id="reset-form" type="button" class="secondary">Reset form</button>
-      </div>
-      <div id="editor-holder" class="editor-holder" aria-live="polite"></div>
-      <div class="output">
-        <div class="output-header">
-          <h3>Live data</h3>
-        </div>
-        <pre id="output" aria-live="polite">{}</pre>
-      </div>
-    </section>
-  </main>
-
-  <section class="documentation" aria-labelledby="documentation-heading">
-    <div class="documentation-content">
-      <h2 id="documentation-heading">How to use this demo</h2>
-      <ol>
-        <li>Pick an ESG-focused example from the library to see a working schema.</li>
-        <li>Modify the JSON Schema in the left pane or paste your own design.</li>
-        <li>Click <strong>Render form</strong> to rebuild the editor with the latest schema.</li>
-        <li>Interact with the generated fields; the live JSON payload is shown on the right.</li>
-        <li>Use <strong>Reset form</strong> to return to the default values defined by the schema.</li>
-      </ol>
-
-      <h3>Embedded dictionaries</h3>
-      <p>
-        The page preloads financial and ESG dictionaries so schemas can stay concise. Reference them with the
-        <code>$data</code> helper and provide optional <code>$fallback</code> values to keep controls operable if a token is
-        removed.
-      </p>
-      <table class="dictionary-table">
-        <thead>
-          <tr>
-            <th scope="col">Dictionary</th>
-            <th scope="col">Description</th>
-            <th scope="col">Useful tokens</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <th scope="row"><code>dict.country</code></th>
-            <td>Countries for issuer, project, or beneficiary locations.</td>
-            <td>
-              <code>{ "$data": "dict.country" }</code>,
-              <code>{ "$data": "dict.country.codes" }</code>
-            </td>
-          </tr>
-          <tr>
-            <th scope="row"><code>dict.currency</code></th>
-            <td>Major currencies for sustainable finance disclosures.</td>
-            <td>
-              <code>{ "$data": "dict.currency" }</code>,
-              <code>{ "$data": "dict.currency.descriptions" }</code>
-            </td>
-          </tr>
-          <tr>
-            <th scope="row"><code>dict.esg_metric</code></th>
-            <td>Key metrics covering climate, water, waste, and diversity.</td>
-            <td>
-              <code>{ "$data": "dict.esg_metric" }</code>,
-              <code>{ "$data": "dict.esg_metric.codes" }</code>
-            </td>
-          </tr>
-          <tr>
-            <th scope="row"><code>dict.asset_class</code></th>
-            <td>Asset classes used in allocation and product classification examples.</td>
-            <td>
-              <code>{ "$data": "dict.asset_class" }</code>,
-              <code>{ "$data": "dict.asset_class.descriptions" }</code>
-            </td>
-          </tr>
-          <tr>
-            <th scope="row"><code>dict.sustainability_rating</code></th>
-            <td>Risk ratings that power supplier and product screening.</td>
-            <td>
-              <code>{ "$data": "dict.sustainability_rating.codes" }</code>,
-              <code>{ "$data": "dict.sustainability_rating.byCode" }</code>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <h3>Token usage example</h3>
-      <pre class="code-snippet" aria-label="Sample schema snippet">
-{
-  "currency": {
+      <div class="tab-pane fade" id="guide-pane" role="tabpanel" aria-labelledby="guide-tab">
+        <div class="row g-4">
+          <div class="col-12 col-xxl-8">
+            <div class="card shadow-sm">
+              <div class="card-header bg-body-tertiary border-bottom-0">
+                <h2 class="h5 mb-0">Instrukcja korzystania</h2>
+              </div>
+              <div class="card-body">
+                <ol class="mb-4">
+                  <li>Wybierz przykład z biblioteki i wczytaj go do edytora schematu.</li>
+                  <li>Dostosuj schemat po lewej stronie lub wklej własny.</li>
+                  <li>Naciśnij <strong>Generuj formularz</strong>, aby przebudować komponent JSON Editor.</li>
+                  <li>Wypełniaj formularz — aktualny JSON pojawi się w panelu po prawej stronie.</li>
+                  <li>Użyj opcji <strong>Resetuj formularz</strong>, aby przywrócić wartości domyślne.</li>
+                </ol>
+                <h3 class="h6">Słowniki w projekcie</h3>
+                <p>
+                  Wszystkie słowniki są osadzone lokalnie w pliku <code>app.js</code>. Możesz je wstrzykiwać do schematu poprzez
+                  token <code>$data</code>. Jeżeli pole musi pozostać aktywne, dodaj opcjonalny <code>$fallback</code> z krótką
+                  listą zastępczą.
+                </p>
+                <table class="table table-bordered align-middle">
+                  <thead class="table-light">
+                    <tr>
+                      <th scope="col">Token</th>
+                      <th scope="col">Opis</th>
+                      <th scope="col">Zastosowanie</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <th scope="row"><code>dict.country</code></th>
+                      <td>Kraje emitentów, beneficjentów oraz lokalizacji projektów.</td>
+                      <td><code>enum</code>, <code>enum_titles</code>, walidacja adresów.</td>
+                    </tr>
+                    <tr>
+                      <th scope="row"><code>dict.currency</code></th>
+                      <td>Najczęściej raportowane waluty w finansach zrównoważonych.</td>
+                      <td>Walidacja waluty, pola wyboru dla kwot.</td>
+                    </tr>
+                    <tr>
+                      <th scope="row"><code>dict.esg_metric</code></th>
+                      <td>Metryki środowiskowe, społeczne i nadzorcze wykorzystywane w raportach KPI.</td>
+                      <td>Listy wskaźników, opisy pól, walidacja danych liczbowych.</td>
+                    </tr>
+                    <tr>
+                      <th scope="row"><code>dict.asset_class</code></th>
+                      <td>Klasy aktywów wykorzystywane przy raportowaniu alokacji.</td>
+                      <td>Kategoryzacja produktów, filtry inwestycyjne.</td>
+                    </tr>
+                    <tr>
+                      <th scope="row"><code>dict.sustainability_rating</code></th>
+                      <td>Oceny ryzyka ESG wykorzystywane przy ocenie partnerów i dostawców.</td>
+                      <td>Progi walidacyjne, pola wyboru, logika warunkowa.</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <h3 class="h6">Przykładowy fragment schematu</h3>
+                <pre class="code-snippet" aria-label="Przykładowy kod">{
+  "waluta": {
     "type": "string",
-    "title": "Reporting currency",
+    "title": "Waluta raportowania",
     "enum": { "$data": "dict.currency.codes" },
     "options": {
       "enum_titles": { "$data": "dict.currency.descriptions" }
-    }
+    },
+    "default": "EUR"
   }
-}
-      </pre>
+}</pre>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-xxl-4">
+            <div class="card shadow-sm h-100">
+              <div class="card-header bg-body-tertiary border-bottom-0">
+                <h2 class="h6 mb-0">Wskazówki</h2>
+              </div>
+              <div class="card-body">
+                <ul class="list-unstyled small mb-0">
+                  <li class="mb-2">Stosuj walidację (<code>minItems</code>, <code>pattern</code>, <code>minimum</code>) do kontroli jakości danych.</li>
+                  <li class="mb-2">Łącz słowniki z regułami warunkowymi (<code>if</code>/<code>then</code>), aby zmieniać wymagania formularza.</li>
+                  <li class="mb-2">Dla wielokrotnych wyborów używaj tablic i formatu <code>table</code>, aby zapewnić czytelność.</li>
+                  <li>Dodawaj komentarze w polu <code>description</code>, aby użytkownicy znali kontekst informacji.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-  </section>
+  </main>
 
-  <footer>
-    <p>
-      All sample schemas and lookup dictionaries are embedded locally in <code>app.js</code>. No network requests are
-      required to explore the editor.
-    </p>
+  <footer class="py-4 border-top">
+    <div class="container d-flex flex-column flex-md-row justify-content-between align-items-start gap-2">
+      <p class="mb-0 small text-muted">
+        Przykładowe schematy i słowniki są przechowywane lokalnie — aplikacja nie wykonuje żadnych zapytań sieciowych.
+      </p>
+      <span class="small text-muted">JSON Editor 2.14.1 + Bootstrap 5</span>
+    </div>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@json-editor/json-editor@2.14.1/dist/jsoneditor.min.js"></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+    crossorigin="anonymous"
+  ></script>
   <script src="app.js"></script>
 </body>
 </html>
