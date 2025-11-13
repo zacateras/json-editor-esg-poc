@@ -50,12 +50,6 @@ main {
   max-width: 100%;
 }
 
-.editor-holder .form-control,
-.editor-holder input,
-.editor-holder textarea {
-  width: 100%;
-}
-
 .editor-holder select.form-select {
   width: auto;
   min-width: 12rem;
@@ -173,20 +167,4 @@ main {
 .schema-editor:focus-within .schema-highlights {
   border-color: var(--bs-primary);
   box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-}
-
-@media (prefers-color-scheme: dark) {
-  body {
-    background-color: #0d1117;
-    color: #e6edf3;
-  }
-
-  .token-guide {
-    border-color: rgba(50, 130, 184, 0.35);
-    background-color: rgba(50, 130, 184, 0.1);
-  }
-
-  .code-snippet {
-    background-color: rgba(13, 17, 23, 0.9);
-  }
 }
